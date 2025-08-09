@@ -1,0 +1,50 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      # Optional: pre-embed your web app URL at build time.
+      # Set this in the workflow "Variables" or as a Secret.
+      WEB_APP_URL: ${{ vars.WEB_APP_URL }}
+      # If you want to force it here, uncomment and set:
+      # WEB_APP_URL: "https://script.google.com/macros/s/your-webapp-id/exec"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: (Optional) Inject WEB_APP_URL into strings.xml
+        if: env.WEB_APP_URL != ''
+        run: |
+          FILE="app/src/main/res/values/strings.xml"
+          mkdir -p "$(dirname "$FILE")"
+          if [ ! -f "$FILE" ]; then
+            cat > "$FILE" <<'EOF'
+            <resources>
+              <string name="app_name">Portfolio</string>
+              <string name="web_app_url"></string>
+            </resources>
+EOF
+          fi
+          if grep -
